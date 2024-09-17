@@ -6,7 +6,7 @@ import ContentView from "./components/ContentView";
 
 const App = () => {
   return (
-    <main className="">
+    <main className="overflow-hidden">
       <ContentView />
     </main>
   );

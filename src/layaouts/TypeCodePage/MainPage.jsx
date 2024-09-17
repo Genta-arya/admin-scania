@@ -1,12 +1,16 @@
 import React from "react";
 import TableTypeCode from "./components/TableTypeCode";
+import Header from "../../components/Header";
+import { Toaster } from "sonner";
 
 const TypeCodePage = () => {
   return (
-    <div className="">
-      <div className="">
-        <TableTypeCode />
-      </div>
+    <div className="w-full ">
+      <Header title={"Type Code Management"} />
+
+      <TableTypeCode />
+
+      <Toaster richColors position="top-center" />
     </div>
   );
 };
