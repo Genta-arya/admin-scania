@@ -39,7 +39,7 @@ const SideBar = () => {
           initial={{ x: "-100%" }}
           animate={{ x: 0 }}
           exit={{ x: "-100%" }}
-          transition={{ type: "spring", stiffness: 300, damping: 300  }}
+          transition={{ type: "spring", stiffness: 300, damping: 50  }}
           className={`min-h-screen w-52  bg-gray-800 text-white flex flex-col justify-between  items-center ${
             isSidebarVisible
               ? "block fixed "

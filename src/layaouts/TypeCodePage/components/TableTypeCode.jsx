@@ -8,14 +8,19 @@ import {
 } from "../../../service/API/typeCode/_serviceType";
 import handleError from "../../../utils/HandleError";
 import { toast } from "sonner";
+import ModalEditCode from "./ModalEditCode";
+import { useCodeStore } from "../../../utils/useCodeTypeStore";
+import ModalAddNewCode from "./ModalAddNewCode";
 
 const TableTypeCode = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [modalAdd, setModalAdd] = useState(false);
-  const [data, setData] = useState([]);
+  const { data, setData } = useCodeStore();
   const [editTypeId, setEditTypeId] = useState(null);
   const [editTypeName, setEditTypeName] = useState("");
-
+  const [modalEditCode, setModalEditCode] = useState(false);
+  const [modalAddCode, setModalAddCode] = useState(null);
+  const [selectData, setSelectData] = useState(null);
   const fetchData = async () => {
     try {
       const response = await handleGetType();
@@ -33,8 +38,9 @@ const TableTypeCode = () => {
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleEdit = (typeId, codeId) => {
-    alert(`Edit item with Type ID ${typeId} and Code ID ${codeId}`);
+  const handleEdit = (item) => {
+    setModalEditCode(true);
+    setSelectData(item);
   };
 
   const handleDelete = (typeId, codeId) => {
@@ -73,11 +79,17 @@ const TableTypeCode = () => {
   return (
     <div className="w-screen md:px-4">
       <div className="mb-4 md:flex lg:flex gap-4 justify-between flex-grow px-2 lg:px-8 md:px-4">
-        <div className="md:block lg:block block ">
+        <div className="gap-2  flex w-full">
           <Button
             onClick={() => setModalAdd(true)}
             text="Add Type Code"
-            width="w-full"
+            width="md:w-auto lg:w-auto w-full"
+            icon={<FaPlus />}
+          />
+          <Button
+            onClick={() => setModalAddCode(true)}
+            text="Add New Code"
+            width="md:w-auto lg:w-auto w-full"
             icon={<FaPlus />}
           />
         </div>
@@ -170,7 +182,7 @@ const TableTypeCode = () => {
                   <td className="py-2 px-4 border-b -">
                     <div className="flex   items-center md:flex-row lg:flex-row flex-col gap-2 justify-center">
                       <Button
-                        onClick={() => handleEdit(item.id, codeItem.id)}
+                        onClick={() => handleEdit(item)}
                         text="Edit"
                         icon={<FaEdit />}
                       />
@@ -193,6 +205,21 @@ const TableTypeCode = () => {
         <ModalAddCode
           closeModal={() => setModalAdd(false)}
           isModalOpen={modalAdd}
+          refresh={fetchData}
+        />
+      )}
+      {modalEditCode && (
+        <ModalEditCode
+          closeModal={() => setModalEditCode(false)}
+          isModalOpen={modalEditCode}
+          data={selectData}
+          refresh={fetchData}
+        />
+      )}
+      {modalAddCode && (
+        <ModalAddNewCode
+          closeModal={() => setModalAddCode(false)}
+          isModalOpen={modalAddCode}
           refresh={fetchData}
         />
       )}
