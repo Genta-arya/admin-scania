@@ -1,6 +1,7 @@
 import { toast } from "sonner";
 
 const handleError = (error) => {
+
   if (error.response) {
     const { status, data } = error.response;
     const message = data?.error || "An unexpected error occurred.";

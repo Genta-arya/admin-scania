@@ -4,18 +4,26 @@ import { handlePostType } from "../../../service/API/typeCode/_serviceType";
 import { toast } from "sonner";
 import handleError from "../../../utils/HandleError";
 import LoadingButton from "../../../components/LoadingButton";
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+  deleteObject,
+} from "firebase/storage";
+import app from "../../../service/FirebaseConfig";
 
-const ModalAddCode = ({ isModalOpen, closeModal ,refresh}) => {
+const ModalAddCode = ({ isModalOpen, closeModal, refresh }) => {
   const [form, setForm] = useState({
     type: "",
-    codes: [{ code: "", pdf: null }], // Set pdf as null initially
+    codes: [{ code: "", pdf: null, pdfUrl: "" }],
   });
   const [loading, setLoading] = useState(false);
 
   const handleAddCode = () => {
     setForm({
       ...form,
-      codes: [...form.codes, { code: "", pdf: null }],
+      codes: [...form.codes, { code: "", pdf: null, pdfUrl: "" }],
     });
   };
 
@@ -48,32 +56,82 @@ const ModalAddCode = ({ isModalOpen, closeModal ,refresh}) => {
       alert("Please upload a valid PDF file.");
     }
   };
+  const deletePdfFromFirebase = async (pdfUrl) => {
+    const storage = getStorage(app);
+    const storageRef = ref(storage, pdfUrl);
+
+    return deleteObject(storageRef);
+  };
+  const uploadPdfToFirebase = async (file, code) => {
+    const storage = getStorage(app);
+    const fileName = `${code}_${file.name}`; 
+    const storageRef = ref(storage, `pdfs/${fileName}`);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    return new Promise((resolve, reject) => {
+      uploadTask.on(
+        "state_changed",
+        null,
+        (error) => reject(error),
+        () => {
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            resolve(downloadURL);
+          });
+        }
+      );
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setLoading(true);
+
+    const uploadedPdfUrls = []; 
     try {
-      const formData = new FormData();
-      formData.append("name", form.type);
+     
+      const updatedCodes = await Promise.all(
+        form.codes.map(async (code) => {
+          if (code.pdf) {
+            const pdfUrl = await uploadPdfToFirebase(
+              code.pdf,
+              code.code
+            );
+            uploadedPdfUrls.push(pdfUrl); 
+            return { ...code, pdfUrl };
+          }
+          return code;
+        })
+      );
 
-      form.codes.forEach((code, index) => {
-        formData.append(`codes[${index}].code`, code.code);
-        if (code.pdf) {
-          formData.append(`codes[${index}].pdf`, code.pdf);
-        }
-      });
+      const dataToSubmit = {
+        name: form.type,
+        codes: updatedCodes.map(({ code, pdfUrl }) => ({
+          code,
+          pdfUrl, 
+        })),
+      };
 
-      const response = await handlePostType(formData);
+      const response = await handlePostType(dataToSubmit);
       if (response.message) {
         toast.success(response.message);
         refresh();
         closeModal();
       }
     } catch (error) {
-      handleError(error);
+      // Jika terjadi error, hapus semua file yang sudah di-upload
+      await Promise.all(
+        uploadedPdfUrls.map(async (pdfUrl) => {
+          try {
+            await deletePdfFromFirebase(pdfUrl);
+          } catch (deleteError) {
+            console.error("Error deleting PDF:", deleteError);
+          }
+        })
+      );
 
-    } finally{
+      handleError(error);
+      console.log("Error:", error);
+    } finally {
       setLoading(false);
     }
   };
@@ -137,7 +195,6 @@ const ModalAddCode = ({ isModalOpen, closeModal ,refresh}) => {
                     className="mt-1 block w-full p-2 border border-gray-300 rounded"
                   />
                 </div>
-
                 {form.codes.length > 1 && (
                   <button
                     type="button"

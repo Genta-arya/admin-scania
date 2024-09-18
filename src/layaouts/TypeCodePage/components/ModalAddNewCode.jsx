@@ -2,39 +2,102 @@ import React, { useState } from "react";
 import { useCodeStore } from "../../../utils/useCodeTypeStore";
 import Modal from "../../../components/Modal";
 import Select from "react-select";
-import Button from "../../../components/Button"; // Button komponen
-import { FaPlus } from "react-icons/fa"; // Untuk icon pada button
+import Button from "../../../components/Button";
+import { FaPlus } from "react-icons/fa";
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+  deleteObject,
+} from "firebase/storage";
+
+import { toast } from "sonner";
+import app from "../../../service/FirebaseConfig";
+import { addNewCode } from "../../../service/API/typeCode/_serviceType";
+import handleError from "../../../utils/HandleError";
 
 const ModalAddNewCode = ({ isModalOpen, closeModal, refresh }) => {
-  const { data } = useCodeStore(); // Mengambil data type dari Zustand store
-  const [selectedType, setSelectedType] = useState(null); // State untuk tipe yang dipilih
-  const [code, setCode] = useState(""); // State untuk input code
-  const [pdfUrl, setPdfUrl] = useState(""); // State untuk input PDF URL
+  const { data } = useCodeStore();
+  const [selectedType, setSelectedType] = useState(null);
+  const [code, setCode] = useState("");
+  const [pdfFile, setPdfFile] = useState(null);
+  const [pdfUrl, setPdfUrl] = useState("");
 
-  // Konversi data type ke format yang bisa digunakan oleh react-select
   const options = data.map((type) => ({
     value: type.id,
     label: type.name,
   }));
 
+  // Fungsi untuk menangani upload file
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPdfFile(file);
+      const fileUrl = URL.createObjectURL(file);
+      setPdfUrl(fileUrl);
+    }
+  };
+
   // Fungsi untuk submit data baru
-  const handleSubmit = () => {
-    if (!selectedType || !code || !pdfUrl) {
-      alert("Please fill in all fields.");
+  const handleSubmit = async () => {
+    if (!selectedType || !code || !pdfFile) {
+      toast.error("Please fill in all fields.");
       return;
     }
 
-    const newCode = {
-      typeId: selectedType.value,
-      code,
-      pdfUrl,
-    };
+    const storage = getStorage(app);
+    const fileName = `${pdfFile.name}_${code}.pdf`; // Format nama file
+    const storageRef = ref(storage, `pdfs/${fileName}`);
 
-    console.log("New Code Data:", newCode);
+    try {
+      // Upload file PDF
+      const uploadTask = uploadBytesResumable(storageRef, pdfFile);
 
-    // Refresh data (panggil refresh jika ada fungsi submit API)
-    refresh();
-    closeModal(); // Tutup modal setelah submit
+      // Tunggu upload selesai dan dapatkan URL
+      const newPdfUrl = await new Promise((resolve, reject) => {
+        uploadTask.on(
+          "state_changed",
+          null,
+          (error) => reject(error),
+          async () => {
+            const url = await getDownloadURL(uploadTask.snapshot.ref);
+            resolve(url);
+          }
+        );
+      });
+
+      // Data baru untuk dikirim ke server
+      const newCode = {
+        typeId: selectedType.value,
+        code,
+        pdfUrl: newPdfUrl,
+      };
+
+      // Kirim data ke server
+      try {
+        await addNewCode(newCode);
+        toast.success("Code added successfully!");
+        refresh();
+        closeModal();
+      } catch (serverError) {
+        // Hapus file jika terjadi error saat pengiriman data
+        try {
+          await deleteObject(storageRef);
+        } catch (deleteError) {
+          console.error("Error deleting file:", deleteError);
+        }
+        handleError(serverError);
+      }
+    } catch (uploadError) {
+      handleError(uploadError);
+      // Menghapus file jika terjadi error saat upload
+      try {
+        await deleteObject(storageRef);
+      } catch (deleteError) {
+        console.error("Error deleting file:", deleteError);
+      }
+    }
   };
 
   return (
@@ -58,14 +121,12 @@ const ModalAddNewCode = ({ isModalOpen, closeModal, refresh }) => {
           className="text-sm"
           noOptionsMessage={() => "No types found"}
           isClearable
-          isSearchable // Enable pencarian
+          isSearchable
         />
       </div>
 
-
       {selectedType && (
         <>
-  
           <div className="mb-4">
             <label
               htmlFor="code"
@@ -83,21 +144,20 @@ const ModalAddNewCode = ({ isModalOpen, closeModal, refresh }) => {
             />
           </div>
 
-          {/* Input untuk PDF URL */}
+          {/* Input untuk PDF file */}
           <div className="mb-4">
             <label
-              htmlFor="pdfUrl"
+              htmlFor="pdfFile"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              PDF URL
+              PDF File
             </label>
             <input
-              id="pdfUrl"
-              type="text"
-              value={pdfUrl}
-              onChange={(e) => setPdfUrl(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded w-full"
-              placeholder="Enter PDF URL"
+              id="pdfFile"
+              type="file"
+              accept="application/pdf"
+              onChange={handleFileChange}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
             />
           </div>
 

@@ -18,6 +18,10 @@ const router = createBrowserRouter([
   {
     path:"/wiring-diagram",
     element: <App />,
+  },
+  {
+    path:"/workshop",
+    element: <App />,
   }
 ]);
 

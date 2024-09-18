@@ -1,22 +1,73 @@
 import React, { useState } from "react";
 import Modal from "../../../components/Modal";
 import { FaEye } from "react-icons/fa";
-
+import { toast, Toaster } from "sonner";
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+  deleteObject,
+} from "firebase/storage";
+import app from "../../../service/FirebaseConfig";
+import { updatedCode } from "../../../service/API/typeCode/_serviceType";
 const ModalEditCode = ({ isModalOpen, closeModal, refresh, data }) => {
-  const dataCode = data?.codes?.[0] || {};
+  const dataCode = data;
+
   const [code, setCode] = useState(dataCode.code || "");
   const [pdfUrl, setPdfUrl] = useState(dataCode.pdfUrl || "");
-
+  const [currentPdf, setCurrentPdf] = useState(dataCode.pdfUrl || "");
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const [isChangingPdf, setIsChangingPdf] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(pdfUrl);
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Add logic to update the code data, for example an API call
+    try {
+      let newPdfUrl = currentPdf;
 
-    refresh();
-    closeModal();
+      if (selectedFile) {
+        const storage = getStorage(app);
+        const fileName = `${selectedFile.name}_${code}.pdf`;
+        const storageRef = ref(storage, `pdfs/${fileName}`);
+
+        const uploadTask = uploadBytesResumable(storageRef, selectedFile);
+
+        await new Promise((resolve, reject) => {
+          uploadTask.on(
+            "state_changed",
+            null,
+            (error) => reject(error),
+            async () => {
+              newPdfUrl = await getDownloadURL(uploadTask.snapshot.ref);
+              resolve();
+            }
+          );
+        });
+
+        if (pdfUrl) {
+          const decodedPdfUrl = decodeURIComponent(currentPdf);
+          const fileNameWithQuery = decodedPdfUrl.split("/").pop();
+          const oldFileName = fileNameWithQuery.split("?")[0]; //
+
+          const oldPdfRef = ref(storage, `pdfs/${oldFileName}`);
+          await deleteObject(oldPdfRef);
+        }
+      }
+
+      const dataToSubmit = {
+        code,
+        pdfUrl: newPdfUrl,
+      };
+
+      await updatedCode(dataCode.id, dataToSubmit);
+
+      toast.success("Code updated successfully!");
+      refresh();
+      closeModal();
+    } catch (error) {
+      toast.error("Failed to update code!");
+    }
   };
 
   const openPdfModal = () => {
@@ -32,7 +83,16 @@ const ModalEditCode = ({ isModalOpen, closeModal, refresh, data }) => {
     if (file) {
       const fileUrl = URL.createObjectURL(file);
       setPdfUrl(fileUrl);
-      setPreviewUrl(fileUrl); // Menggunakan URL sementara untuk preview
+      setPreviewUrl(fileUrl);
+    }
+  };
+
+  const copyUrlToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(pdfUrl);
+      toast.success("URL copied to clipboard!");
+    } catch (error) {
+      toast.error("Failed to copy URL!");
     }
   };
   return (
@@ -62,7 +122,8 @@ const ModalEditCode = ({ isModalOpen, closeModal, refresh, data }) => {
               <input
                 type="text"
                 id="pdfUrl"
-                className="mt-1 block w-full px-3 py-2 border rounded-md bg-gray-100"
+                onClick={copyUrlToClipboard}
+                className="mt-1 block w-full px-3 py-2 border cursor-pointer hover:border-green-500 rounded-md bg-gray-100"
                 value={pdfUrl}
                 readOnly
               />
@@ -101,13 +162,13 @@ const ModalEditCode = ({ isModalOpen, closeModal, refresh, data }) => {
             <button
               type="button"
               onClick={closeModal}
-              className="px-4 py-2 bg-gray-500 text-white rounded-md"
+              className="px-4 py-2 bg-gray-500 hover:opacity-80 text-white rounded-md"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-gray-800 text-white rounded-md"
+              className="px-4 py-2 bg-gray-800 hover:opacity-80 text-white rounded-md"
             >
               Save
             </button>
@@ -115,12 +176,11 @@ const ModalEditCode = ({ isModalOpen, closeModal, refresh, data }) => {
         </form>
       </Modal>
 
-    
       <Modal isOpen={isPdfModalOpen} onClose={closePdfModal}>
         <h2 className="text-lg font-bold mb-4">Preview PDF</h2>
         <div className="w-full h-96">
           <iframe
-           src={previewUrl} 
+            src={previewUrl}
             title="PDF Preview"
             className="w-full h-full border"
           />

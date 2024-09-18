@@ -7,9 +7,11 @@ import {
   AiOutlineLogout,
   AiOutlineMenu,
 } from "react-icons/ai";
-import { FaFileArchive, FaTimes } from "react-icons/fa";
+import { FaFileArchive, FaTimes, FaUserCheck } from "react-icons/fa";
 import useSidebarStore from "../utils/useSidebarStore";
 import { motion, AnimatePresence } from "framer-motion";
+import { FaGears, FaUserGear } from "react-icons/fa6";
+import icon from "../assets/icon.jpg";
 const SideBar = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -39,21 +41,19 @@ const SideBar = () => {
           initial={{ x: "-100%" }}
           animate={{ x: 0 }}
           exit={{ x: "-100%" }}
-          transition={{ type: "spring", stiffness: 300, damping: 50  }}
+          transition={{ type: "spring", stiffness: 300, damping: 50 }}
           className={`min-h-screen w-52  bg-gray-800 text-white flex flex-col justify-between  items-center ${
-            isSidebarVisible
-              ? "block fixed "
-              : "hidden transition-all ease-in"
+            isSidebarVisible ? "block fixed " : "hidden transition-all ease-in"
           }`}
         >
           <div>
-            <div className="p-4 border-b relative">
+            <div className="p-4 relative">
               <button onClick={toggleSidebar} className="absolute top-3 left-0">
                 <FaTimes />
               </button>
-              <h2 className="text-lg font-bold text-center  mt-8">
-                R620 E-BrakeSys
-              </h2>
+              <div className="mt-8 flex justify-center">
+                <img src={icon} className="md:w-32 lg:w-32 rounded-md w-24" />
+              </div>
             </div>
             <ul className="space-y-1 text-sm overflow-auto">
               <div className="mt-2">
@@ -63,19 +63,8 @@ const SideBar = () => {
                       pathname === "/" ? "font-bold border-b-4" : ""
                     }`}
                   >
-                    <AiOutlineCode className="mr-2 text-xl" />
+                    <FaGears className="mr-2 text-xl" />
                     <span className="">Type Code</span>
-                  </li>
-                </Link>
-
-                <Link to={"/knowledge"} title="Knowledge">
-                  <li
-                    className={`p-4 hover:bg-gray-700 cursor-pointer flex items-center relative ${
-                      pathname === "/knowledge" ? "font-bold border-b-4" : ""
-                    }`}
-                  >
-                    <AiOutlineBook className="mr-2 text-xl" />
-                    <span className="">Knowledge</span>
                   </li>
                 </Link>
 
