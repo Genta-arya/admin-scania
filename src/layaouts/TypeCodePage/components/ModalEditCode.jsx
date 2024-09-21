@@ -11,6 +11,7 @@ import {
 } from "firebase/storage";
 import app from "../../../service/FirebaseConfig";
 import { updatedCode } from "../../../service/API/typeCode/_serviceType";
+import LoadingButton from "../../../components/LoadingButton";
 const ModalEditCode = ({ isModalOpen, closeModal, refresh, data }) => {
   const dataCode = data;
 
@@ -21,8 +22,10 @@ const ModalEditCode = ({ isModalOpen, closeModal, refresh, data }) => {
   const [isChangingPdf, setIsChangingPdf] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(pdfUrl);
+  const [loading, setLoading] = useState(false);
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       let newPdfUrl = currentPdf;
 
@@ -67,6 +70,8 @@ const ModalEditCode = ({ isModalOpen, closeModal, refresh, data }) => {
       closeModal();
     } catch (error) {
       toast.error("Failed to update code!");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -159,18 +164,21 @@ const ModalEditCode = ({ isModalOpen, closeModal, refresh, data }) => {
           </div>
 
           <div className="flex flex-col-reverse gap-2">
-            <button
-              type="button"
-              onClick={closeModal}
-              className="px-4 py-2 bg-gray-500 hover:opacity-80 text-white rounded-md"
-            >
-              Cancel
-            </button>
+            {!loading && (
+              <button
+                type="button"
+                onClick={closeModal}
+                className="px-4 py-2 bg-gray-500 hover:opacity-80 text-white rounded-md"
+              >
+                Cancel
+              </button>
+            )}
             <button
               type="submit"
+              disabled={loading}
               className="px-4 py-2 bg-gray-800 hover:opacity-80 text-white rounded-md"
             >
-              Save
+              <LoadingButton loading={loading} text={"Save"} />
             </button>
           </div>
         </form>

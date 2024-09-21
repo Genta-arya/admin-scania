@@ -21,6 +21,9 @@ const SideBar = () => {
     navigate("/login");
   };
   const { isSidebarVisible, toggleSidebar } = useSidebarStore();
+  if (pathname.startsWith("/detail")) {
+    return null;
+  }
 
   return (
     <>
@@ -43,7 +46,7 @@ const SideBar = () => {
           exit={{ x: "-100%" }}
           transition={{ type: "spring", stiffness: 300, damping: 50 }}
           className={`min-h-screen w-52  bg-gray-800 text-white flex flex-col justify-between  items-center ${
-            isSidebarVisible ? "block fixed " : "hidden transition-all ease-in"
+            isSidebarVisible ? "block fixed top-0" : "hidden transition-all ease-in"
           }`}
         >
           <div>

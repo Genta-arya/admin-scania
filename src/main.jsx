@@ -1,15 +1,18 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App.jsx";
+
 import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import AuthPage from "./layaouts/AuthPage/AuthPage.jsx";
 import DiagramPage from "./layaouts/DiagramPage/DiagramPage.jsx";
+import TypeCodePage from "./layaouts/TypeCodePage/MainPage.jsx";
+import WorkshopPage from './layaouts/WorkShopPage/WorkshopPage';
+import DetailFolder from "./layaouts/WorkShopPage/Detail/DetailFolder.jsx";
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />,
+    element: <TypeCodePage />,
   },
   {
     path: "/login",
@@ -17,12 +20,17 @@ const router = createBrowserRouter([
   },
   {
     path:"/wiring-diagram",
-    element: <App />,
+    element: <DiagramPage  />,
   },
   {
     path:"/workshop",
-    element: <App />,
+    element: <WorkshopPage />,
+  },
+  {
+    path:"/detail/:name/:id",
+    element: <DetailFolder />,
   }
+
 ]);
 
 createRoot(document.getElementById("root")).render(

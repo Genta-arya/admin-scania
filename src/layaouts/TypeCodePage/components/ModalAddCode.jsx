@@ -64,7 +64,7 @@ const ModalAddCode = ({ isModalOpen, closeModal, refresh }) => {
   };
   const uploadPdfToFirebase = async (file, code) => {
     const storage = getStorage(app);
-    const fileName = `${code}_${file.name}`; 
+    const fileName = `${code}_${file.name}`;
     const storageRef = ref(storage, `pdfs/${fileName}`);
     const uploadTask = uploadBytesResumable(storageRef, file);
 
@@ -86,17 +86,13 @@ const ModalAddCode = ({ isModalOpen, closeModal, refresh }) => {
     e.preventDefault();
     setLoading(true);
 
-    const uploadedPdfUrls = []; 
+    const uploadedPdfUrls = [];
     try {
-     
       const updatedCodes = await Promise.all(
         form.codes.map(async (code) => {
           if (code.pdf) {
-            const pdfUrl = await uploadPdfToFirebase(
-              code.pdf,
-              code.code
-            );
-            uploadedPdfUrls.push(pdfUrl); 
+            const pdfUrl = await uploadPdfToFirebase(code.pdf, code.code);
+            uploadedPdfUrls.push(pdfUrl);
             return { ...code, pdfUrl };
           }
           return code;
@@ -107,7 +103,7 @@ const ModalAddCode = ({ isModalOpen, closeModal, refresh }) => {
         name: form.type,
         codes: updatedCodes.map(({ code, pdfUrl }) => ({
           code,
-          pdfUrl, 
+          pdfUrl,
         })),
       };
 
@@ -118,7 +114,6 @@ const ModalAddCode = ({ isModalOpen, closeModal, refresh }) => {
         closeModal();
       }
     } catch (error) {
-      // Jika terjadi error, hapus semua file yang sudah di-upload
       await Promise.all(
         uploadedPdfUrls.map(async (pdfUrl) => {
           try {
@@ -215,13 +210,15 @@ const ModalAddCode = ({ isModalOpen, closeModal, refresh }) => {
             Add Another Code
           </button>
           <div className="flex gap-2 mt-4 flex-col-reverse">
-            <button
-              type="button"
-              onClick={closeModal}
-              className="p-2 bg-gray-500 text-white rounded hover:opacity-80"
-            >
-              Cancel
-            </button>
+            {!loading && (
+              <button
+                type="button"
+                onClick={closeModal}
+                className="p-2 bg-gray-500 text-white rounded hover:opacity-80"
+              >
+                Cancel
+              </button>
+            )}
             <button
               type="submit"
               disabled={loading}

@@ -16,6 +16,7 @@ import ModalAddNewCode from "./ModalAddNewCode";
 import { deleteObject, getStorage, ref } from "@firebase/storage";
 import app, { storage } from "../../../service/FirebaseConfig";
 import { div } from "framer-motion/m";
+import LoadingGlobal from "../../../components/Loading";
 
 const TableTypeCode = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -27,12 +28,15 @@ const TableTypeCode = () => {
   const [modalAddCode, setModalAddCode] = useState(null);
   const [selectData, setSelectData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [loadings, setLoadings] = useState(true);
   const fetchData = async () => {
     try {
       const response = await handleGetType();
       setData(response.data);
     } catch (error) {
       handleError(error);
+    } finally {
+      setLoadings(false);
     }
   };
 
@@ -56,7 +60,7 @@ const TableTypeCode = () => {
       if (pdfUrl) {
         const decodedPdfUrl = decodeURIComponent(pdfUrl);
         const fileNameWithQuery = decodedPdfUrl.split("/").pop();
-        const oldFileName = fileNameWithQuery.split("?")[0]; //
+        const oldFileName = fileNameWithQuery.split("?")[0]; 
 
         await deleteObject(ref(storage, `pdfs/${oldFileName}`));
 
@@ -116,6 +120,9 @@ const TableTypeCode = () => {
       }
     }
   };
+  if (loadings) {
+    return <LoadingGlobal />;
+  }
 
   return (
     <div className="w-screen md:px-4">

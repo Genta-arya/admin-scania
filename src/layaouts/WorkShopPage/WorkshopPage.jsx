@@ -1,17 +1,13 @@
 import React from "react";
-import Header from "../../components/Header";
-import { Toaster } from "sonner";
+
 import FolderList from "./components/FolderList";
+import LayoutContainer from "../components/LayoutContainer";
 
 const WorkshopPage = () => {
   return (
-    <div className="w-full ">
-      <Header title={"Workshop Management"} />
-
+    <LayoutContainer title={"Workshop Management"}>
       <FolderList />
-
-      <Toaster richColors position="top-center" />
-    </div>
+    </LayoutContainer>
   );
 };
 

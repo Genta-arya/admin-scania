@@ -1,17 +1,12 @@
-import React from 'react'
-import Header from '../../components/Header'
-import { Toaster } from 'sonner'
+import React from "react";
+import Header from "../../components/Header";
+import { Toaster } from "sonner";
+import LayoutContainer from "../components/LayoutContainer";
 
 const DiagramPage = () => {
   return (
-    <div className="w-full ">
-      <Header title={"Wiring Diagram Management"} />
+    <LayoutContainer title={"Wiring Diagram Management"}></LayoutContainer>
+  );
+};
 
-    
-
-      <Toaster richColors position="top-center" />
-    </div>
-  )
-}
-
-export default DiagramPage
+export default DiagramPage;

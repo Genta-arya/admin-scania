@@ -23,7 +23,7 @@ const ModalAddNewCode = ({ isModalOpen, closeModal, refresh }) => {
   const [code, setCode] = useState("");
   const [pdfFile, setPdfFile] = useState(null);
   const [pdfUrl, setPdfUrl] = useState("");
-
+  const [loading, setLoading] = useState(false);
   const options = data.map((type) => ({
     value: type.id,
     label: type.name,
@@ -45,6 +45,7 @@ const ModalAddNewCode = ({ isModalOpen, closeModal, refresh }) => {
       toast.error("Please fill in all fields.");
       return;
     }
+    setLoading(true);
 
     const storage = getStorage(app);
     const fileName = `${pdfFile.name}_${code}.pdf`; // Format nama file
@@ -97,6 +98,8 @@ const ModalAddNewCode = ({ isModalOpen, closeModal, refresh }) => {
       } catch (deleteError) {
         console.error("Error deleting file:", deleteError);
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -166,6 +169,7 @@ const ModalAddNewCode = ({ isModalOpen, closeModal, refresh }) => {
             onClick={handleSubmit}
             text="Add Code"
             icon={<FaPlus />}
+            loading={loading}
             width="w-full"
             bg="bg-gray-800"
           />
