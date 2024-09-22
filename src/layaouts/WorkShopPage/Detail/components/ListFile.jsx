@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import handleError from "../../../../utils/HandleError";
 import {
+  changeSingleFiles,
+  deleteFiles,
   getSingleFolder,
   uploadFile,
 } from "../../../../service/API/Folder/_serviceFolder";
@@ -26,9 +28,11 @@ const ListFile = ({ id }) => {
   const [files, setFiles] = useState([]);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [deleteFile, setDeleteFile] = useState(null); // File yang akan dihapus
-  const [changeFile, setChangeFile] = useState(null); // File yang akan diubah
+  const [deleteFile, setDeleteFile] = useState(null);
+  const [changeFile, setChangeFile] = useState(null);
   const [nameFile, setNameFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const fetchData = async () => {
     try {
       const response = await getSingleFolder(id);
@@ -44,6 +48,7 @@ const ListFile = ({ id }) => {
   }, [id]);
 
   const uploadFiles = async () => {
+    setLoading(true);
     try {
       const storage = getStorage(app);
       const uploadedFileLinks = await Promise.all(
@@ -66,11 +71,13 @@ const ListFile = ({ id }) => {
           try {
             await deleteObject(fileRef);
           } catch (deleteError) {
-            console.error("Failed to delete file:", file.name, deleteError);
+           
           }
         })
       );
       setFiles([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -79,15 +86,17 @@ const ListFile = ({ id }) => {
   };
 
   const handleDelete = async () => {
+    setLoading(true);
     try {
-      const storage = getStorage(app);
-      const fileRef = ref(storage, `pdfs/${deleteFile.name}`);
-      await deleteObject(fileRef);
       toast.success("File deleted successfully");
       setDeleteFile(null);
+      await deleteFiles(deleteFile.id);
       fetchData();
     } catch (error) {
+   
       handleError(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -113,7 +122,7 @@ const ListFile = ({ id }) => {
     );
 
     if (pdfFiles.length + files.length > 20) {
-      alert("Maximum 20 files can be uploaded.");
+      toast.info("Maximum 20 files can be uploaded.");
     } else {
       setFiles((prevFiles) => [...prevFiles, ...pdfFiles]);
     }
@@ -122,17 +131,31 @@ const ListFile = ({ id }) => {
     document.getElementById("fileInput").click();
   };
   const handleFileChange = async (newFile) => {
+    if (!newFile) {
+      return;
+    }
+
+    if (newFile.type !== "application/pdf") {
+      toast.info("Only PDF files are allowed.");
+      return;
+    }
+    setLoading(true);
     try {
       const storage = getStorage(app);
       const fileRef = ref(storage, `pdfs/${newFile.name}`);
       await uploadBytes(fileRef, newFile);
       const fileUrl = await getDownloadURL(fileRef);
 
+      await changeSingleFiles(changeFile.id, fileUrl);
+      setFiles([]);
+
       setChangeFile(null);
       fetchData();
       toast.success("File changed successfully");
     } catch (error) {
       handleError(error);
+    } finally {
+      setLoading(false);
     }
   };
   const handleFileSelect = (event) => {
@@ -142,26 +165,31 @@ const ListFile = ({ id }) => {
     );
 
     if (pdfFiles.length + files.length > 20) {
-      alert("Maximum 20 files can be uploaded.");
+      toast.info("Maximum 20 files can be uploaded.");
     } else {
       setFiles((prevFiles) => [...prevFiles, ...pdfFiles]);
     }
   };
-  const handleAddNewFile = () => {
-    setFiles([]);
-    setIsUploading(true);
-  };
+
   const handleCancel = () => {
     setFiles([]);
     setIsUploading(false);
   };
+  const filteredFiles = data
+    ? data.files.filter((file) =>
+        decodeURIComponent(file.fileUrl.split("/o/").pop().split("?")[0])
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase())
+      )
+    : [];
 
   if (!data) return <LoadingGlobal />;
+  if (loading) return <LoadingGlobal />;
 
   return (
-    <div className="px-6">
+    <div className="px-6 pb-8 ">
       {isUploading ? (
-        <div className="flex flex-col items-center mx-auto justify-center min-h-screen">
+        <div className="flex flex-col items-center mx-auto justify-center min-h-screen ">
           <UploadPage
             dragging={dragging}
             handleFileSelect={handleFileSelect}
@@ -190,9 +218,18 @@ const ListFile = ({ id }) => {
         </div>
       ) : (
         <>
-          {data.files.length > 0 ? (
-            <ul className="space-y-2">
-              <div>
+          <div className="">
+            <input
+              type="text"
+              placeholder="Search files..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+          {filteredFiles.length > 0 ? (
+            <ul className="space-y-4">
+              <div className="mt-4">
                 <Button
                   text={"Add new file"}
                   width="w-full"
@@ -200,7 +237,7 @@ const ListFile = ({ id }) => {
                   onClick={() => setIsUploading(true)}
                 />
               </div>
-              {data.files.map((file, index) => {
+              {filteredFiles.map((file, index) => {
                 const fileName = decodeURIComponent(
                   file.fileUrl.split("/o/").pop().split("?")[0]
                 );
@@ -210,9 +247,9 @@ const ListFile = ({ id }) => {
                 return (
                   <li
                     key={index}
-                    className="flex items-center justify-between bg-blue-50 p-3 rounded-md shadow-sm transition"
+                    className="flex items-center justify-between bg-blue-50 p-3 rounded-md shadow-sm transition  "
                   >
-                    <span className="flex items-center gap-2 text-gray-800 justify-between">
+                    <span className="flex items-center gap-2 text-gray-800 justify-between ">
                       <button onClick={() => handleClickFileToDelete(file)}>
                         <FaTrash />
                       </button>
@@ -221,7 +258,9 @@ const ListFile = ({ id }) => {
                         onClick={() => setPreviewUrl(file.fileUrl)}
                       >
                         <FaFilePdf className="mr-2 text-red-500" />
-                        <p>{cleanFileName}</p>
+                        <p className="md:max-w-64 lg:max-w-80 max-w-48 truncate w-full">
+                          {cleanFileName}
+                        </p>
                       </div>
                     </span>
                     <button
@@ -237,7 +276,7 @@ const ListFile = ({ id }) => {
               })}
             </ul>
           ) : (
-            <div className="mt-8">
+            <div className="mt-3">
               <Button
                 text={"Add new file"}
                 width="w-full"
@@ -306,7 +345,7 @@ const ListFile = ({ id }) => {
               <Button
                 text="Change"
                 bg="bg-gray-800"
-               
+                onClick={() => handleFileChange(files[files.length - 1])}
               />
             </div>
           </div>

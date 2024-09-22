@@ -69,7 +69,7 @@ const TableTypeCode = () => {
       }
       toast.success("Code deleted successfully.");
     } catch (error) {
-      console.log(error);
+    
       handleError(error);
     } finally {
       setLoading(false);

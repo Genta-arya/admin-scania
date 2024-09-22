@@ -86,7 +86,7 @@ const ModalAddNewCode = ({ isModalOpen, closeModal, refresh }) => {
         try {
           await deleteObject(storageRef);
         } catch (deleteError) {
-          console.error("Error deleting file:", deleteError);
+        
         }
         handleError(serverError);
       }
@@ -96,7 +96,7 @@ const ModalAddNewCode = ({ isModalOpen, closeModal, refresh }) => {
       try {
         await deleteObject(storageRef);
       } catch (deleteError) {
-        console.error("Error deleting file:", deleteError);
+      
       }
     } finally {
       setLoading(false);

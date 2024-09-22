@@ -118,14 +118,11 @@ const ModalAddCode = ({ isModalOpen, closeModal, refresh }) => {
         uploadedPdfUrls.map(async (pdfUrl) => {
           try {
             await deletePdfFromFirebase(pdfUrl);
-          } catch (deleteError) {
-            console.error("Error deleting PDF:", deleteError);
-          }
+          } catch (deleteError) {}
         })
       );
 
       handleError(error);
-      console.log("Error:", error);
     } finally {
       setLoading(false);
     }

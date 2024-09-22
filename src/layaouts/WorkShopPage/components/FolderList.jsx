@@ -21,6 +21,7 @@ const FolderList = () => {
   const [editFolderName, setEditFolderName] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingAction, setLoadingAction] = useState(false);
+  const [searchTerm, setSearchTerm] = useState(""); // State untuk menampung input pencarian
   const navigate = useNavigate();
 
   const fetchdata = async () => {
@@ -87,13 +88,20 @@ const FolderList = () => {
     }
   };
 
+  // Fungsi untuk menangani pencarian folder
+  const filteredFolders = folders.filter((folder) =>
+    folder.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   useEffect(() => {
     fetchdata();
   }, []);
+
   if (loading) return <LoadingGlobal />;
+
   return (
     <div className="w-screen md:px-4">
-      <div className="mb-4 md:flex lg:flex gap-4 justify-between flex-grow px-2 lg:px-8 md:px-4">
+      <div className="mb-4 md:flex md:flex-row lg:flex-row flex-col lg:flex gap-4 justify-between   px-2 lg:px-8 md:px-4">
         <div className="gap-2 flex w-full">
           <Button
             onClick={() => setModalAdd(true)}
@@ -102,39 +110,54 @@ const FolderList = () => {
             icon={<FaPlus />}
           />
         </div>
+        {/* Input untuk pencarian */}
+        <input
+          type="text"
+          placeholder="Search folder..."
+          className="border px-3 lg:mt-0 md:mt-0 mt-2 py-2 rounded-md w-full md:max-w-sm lg:max-w-sm"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       </div>
 
       <div className="px-0">
-        <ul className="gap-2 grid md:grid-cols-8 lg:grid-cols-10 grid-cols-4 mt-8">
-          {folders.map((folder) => (
-            <li key={folder.id}>
-              <div className="flex flex-col items-center ">
-                <FaFolder
-                  className="text-gray-600 text-6xl hover:cursor-pointer hover:opacity-70"
-                  onContextMenu={(e) => handleRightClick(e, folder)}
-                  onClick={() => navigateDetail(folder.id, folder.name)}
-                />
-                {editFolderId === folder.id ? (
-                  <input
-                    type="text"
-                    value={editFolderName}
-                    onChange={(e) => setEditFolderName(e.target.value)}
-                    onKeyDown={handleEditFolderName}
-                    className="text-xs max-w-20 text-center border-b border-gray-300 focus:outline-none"
-                    autoFocus
+        <ul className={`gap-2  md:grid-cols-8 lg:grid-cols-10 grid-cols-4 mt-8 ${filteredFolders.length === 0 ? "flex justify-center" : "grid"}`}>
+          {/* Menampilkan folder yang sudah difilter */}
+          {filteredFolders.length > 0 ? (
+            filteredFolders.map((folder) => (
+              <li key={folder.id}>
+                <div className="flex flex-col items-center ">
+                  <FaFolder
+                    className="text-gray-600 text-6xl hover:cursor-pointer hover:opacity-70"
+                    onContextMenu={(e) => handleRightClick(e, folder)}
+                    onClick={() => navigateDetail(folder.id, folder.name)}
                   />
-                ) : (
-                  <span
-                    className="text-xs max-w-20 text-center cursor-pointer hover:underline"
-                    title="Double click to edit"
-                    onDoubleClick={() => handleDoubleClick(folder)}
-                  >
-                    {folder.name}
-                  </span>
-                )}
-              </div>
-            </li>
-          ))}
+                  {editFolderId === folder.id ? (
+                    <input
+                      type="text"
+                      value={editFolderName}
+                      onChange={(e) => setEditFolderName(e.target.value)}
+                      onKeyDown={handleEditFolderName}
+                      className="text-xs max-w-20 text-center border-b border-gray-300 focus:outline-none"
+                      autoFocus
+                    />
+                  ) : (
+                    <span
+                      className="text-xs max-w-20 text-center cursor-pointer hover:underline"
+                      title="Double click to edit"
+                      onDoubleClick={() => handleDoubleClick(folder)}
+                    >
+                      {folder.name}
+                    </span>
+                  )}
+                </div>
+              </li>
+            ))
+          ) : (
+            <div className="mt-24">
+            <p className="text-center text-lg text-gray-500 font-bold">Folder Not Found</p>
+            </div>
+          )}
         </ul>
       </div>
 

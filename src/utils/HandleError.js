@@ -4,7 +4,7 @@ const handleError = (error) => {
 
   if (error.response) {
     const { status, data } = error.response;
-    const message = data?.error || "An unexpected error occurred.";
+    const message = data?.error || data?.message || "An unexpected error occurred." ;
 
     switch (status) {
       case 400:

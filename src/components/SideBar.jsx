@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   AiOutlineCode,
@@ -12,18 +12,32 @@ import useSidebarStore from "../utils/useSidebarStore";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaGears, FaUserGear } from "react-icons/fa6";
 import icon from "../assets/icon.jpg";
+import handleError from "../utils/HandleError";
+import { Logout } from "../service/API/authentikasi/_serviceAuthentikasi";
+import LoadingGlobal from "./Loading";
 const SideBar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { pathname } = location;
+  const [loading, setLoading] = useState(false);
 
-  const handleLogout = () => {
-    navigate("/login");
+  const handleLogout = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      await Logout(token);
+      navigate("/login");
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setLoading(false);
+    }
   };
   const { isSidebarVisible, toggleSidebar } = useSidebarStore();
   if (pathname.startsWith("/detail")) {
     return null;
   }
+  if (loading) return <LoadingGlobal />;
 
   return (
     <>
@@ -46,7 +60,9 @@ const SideBar = () => {
           exit={{ x: "-100%" }}
           transition={{ type: "spring", stiffness: 300, damping: 50 }}
           className={`min-h-screen w-52  bg-gray-800 text-white flex flex-col justify-between  items-center ${
-            isSidebarVisible ? "block fixed top-0" : "hidden transition-all ease-in"
+            isSidebarVisible
+              ? "block fixed top-0"
+              : "hidden transition-all ease-in"
           }`}
         >
           <div>
@@ -60,7 +76,7 @@ const SideBar = () => {
             </div>
             <ul className="space-y-1 text-sm overflow-auto">
               <div className="mt-2">
-                <Link to={"/"} title="Type Code">
+                <Link to={"/"} title="Type Code" onClick={toggleSidebar}>
                   <li
                     className={`p-4 hover:bg-gray-700 cursor-pointer flex items-center ${
                       pathname === "/" ? "font-bold border-b-4" : ""
@@ -71,7 +87,7 @@ const SideBar = () => {
                   </li>
                 </Link>
 
-                <Link to={"/wiring-diagram"}>
+                <Link to={"/wiring-diagram"} onClick={toggleSidebar}>
                   <li
                     className={`p-4 hover:bg-gray-700 cursor-pointer flex items-center relative ${
                       pathname === "/wiring-diagram"
@@ -84,7 +100,7 @@ const SideBar = () => {
                   </li>
                 </Link>
 
-                <Link to={"/workshop"}>
+                <Link to={"/workshop"} onClick={toggleSidebar}>
                   <li
                     className={`p-4 hover:bg-gray-700 cursor-pointer flex items-center relative ${
                       pathname === "/workshop" ? "font-bold border-b-4" : ""
