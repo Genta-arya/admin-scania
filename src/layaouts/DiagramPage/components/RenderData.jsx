@@ -14,6 +14,7 @@ const RenderData = ({ data, handleRightClick, handleDeleteFile }) => {
               className="flex items-center gap-2 hover:cursor-pointer hover:underline"
               onContextMenu={(e) => handleRightClick(e, item)}
               onDoubleClick={(e) => handleRightClick(e, item)}
+        
             >
               <FaFilePdf className="text-red-600 text-3xl mb-4" />
 

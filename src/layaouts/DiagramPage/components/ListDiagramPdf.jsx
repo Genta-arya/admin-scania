@@ -60,6 +60,10 @@ const ListDiagramPdf = () => {
   });
 
   const handleUploads = async () => {
+    if (uploadedFiles.length === 0) {
+      toast.info("Please select at least one file");
+      return;
+    }
     setLoadingACT(true);
     try {
       const promises = uploadedFiles.map(async (file) => {
@@ -77,6 +81,7 @@ const ListDiagramPdf = () => {
       toast.success("Files uploaded successfully");
       fetchData();
       setUploadedFiles([]);
+      setShowModal(false);
     } catch (error) {
       handleError(error);
     } finally {
@@ -100,7 +105,8 @@ const ListDiagramPdf = () => {
       setShowDeleteModal(false);
       setFileToDelete(null);
       toast.success("File deleted successfully");
-      fetchData();
+      fetchData(); 
+
     } catch (error) {
       handleError(error);
     } finally {
