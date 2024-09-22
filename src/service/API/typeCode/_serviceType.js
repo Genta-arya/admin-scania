@@ -3,9 +3,7 @@ import { AxiosConfig } from "../../AxiosConfig";
 export const handlePostType = async (data) => {
   try {
     const response = await AxiosConfig.post("/type", data, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
+      
     });
     return response.data;
   } catch (error) {
