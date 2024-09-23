@@ -7,7 +7,7 @@ import {
   AiOutlineLogout,
   AiOutlineMenu,
 } from "react-icons/ai";
-import { FaFileArchive, FaTimes, FaUserCheck } from "react-icons/fa";
+import { FaBlog, FaFileArchive, FaTimes, FaUserCheck } from "react-icons/fa";
 import useSidebarStore from "../utils/useSidebarStore";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaGears, FaUserGear } from "react-icons/fa6";
@@ -34,7 +34,7 @@ const SideBar = () => {
     }
   };
   const { isSidebarVisible, toggleSidebar } = useSidebarStore();
-  if (pathname.startsWith("/detail")) {
+  if (pathname.startsWith("/detail") || pathname.startsWith("/manage/about")) {
     return null;
   }
   if (loading) return <LoadingGlobal />;
@@ -108,6 +108,17 @@ const SideBar = () => {
                   >
                     <FaFileArchive className="mr-2 text-xl" />
                     <span className="">WorkShop</span>
+                  </li>
+                </Link>
+
+                <Link to={"/manage/about"} onClick={toggleSidebar}>
+                  <li
+                    className={`p-4 hover:bg-gray-700 cursor-pointer flex items-center relative ${
+                      pathname === "/workshop" ? "font-bold border-b-4" : ""
+                    }`}
+                  >
+                    <FaBlog className="mr-2 text-xl" />
+                    <span className="">Manage About</span>
                   </li>
                 </Link>
               </div>

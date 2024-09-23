@@ -2,9 +2,7 @@ import { AxiosConfig } from "../../AxiosConfig";
 
 export const handlePostType = async (data) => {
   try {
-    const response = await AxiosConfig.post("/type", data, {
-      
-    });
+    const response = await AxiosConfig.post("/type", data, {});
     return response.data;
   } catch (error) {
     throw error;
@@ -56,7 +54,6 @@ export const deleteCode = async (id) => {
   }
 };
 
-
 export const deleteType = async (id) => {
   try {
     const response = await AxiosConfig.delete(`/type/${id}`);
@@ -64,4 +61,22 @@ export const deleteType = async (id) => {
   } catch (error) {
     throw error;
   }
-}
+};
+
+export const getAbout = async () => {
+  try {
+    const response = await AxiosConfig.get("/about");
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const manageAbout = async (id, data) => {
+  try {
+    const response = await AxiosConfig.put(`/about/${id}`, data);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
